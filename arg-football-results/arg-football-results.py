@@ -25,33 +25,36 @@ for anho in [2018,2019]:
     fechas = fechas_por_anho[anho]
     campos_wikipedia = 6
     rows = (equipos//2)*fechas
-
+    print(rows)
     partidos = [['' for x in range(campos_wikipedia)] for row in range(rows)]
     i = 0
     start = start_por_anho[anho]   # Buscar a ojo en unos minutos cuando empieza la tabla viendo el HTML de wikipedia, ayudado por bs4
     finish = finish_por_anho[anho] # Buscar a ojo en unos minutos cuando termina la tabla viendo el HTML de wikipedia, ayudado por bs4
+    
     for x in soup.select('table tbody tr td')[start:finish]:
         while(i < campos_wikipedia*rows and partidos[i//campos_wikipedia][i%campos_wikipedia] != ''):
             i += 1
-
-        campo = x.getText().strip().split('[')[0]
-        if campo == '':
-            campo = "Estadio no decidido"
-        if i % campos_wikipedia == 4:  # Fecha
-            dia_mes = list(map(lambda s : s.strip(),campo.split(' de ')))
-            campo = datetime.date(mes_al_anho[dia_mes[1]], mes_a_indice[dia_mes[1]], int(dia_mes[0]))
-        k = 1
-        if x.get('rowspan') != None:
-            k = int(x.get('rowspan'))
-        for j in range(k):
-
-            partidos[i//campos_wikipedia+j][i%campos_wikipedia] = campo
-
-    # TO DO: Hacer mejor con pandas.
-
+        if i < campos_wikipedia*rows:
+            campo = x.getText().strip().split('[')[0]
+            print(campo)
+            if campo == '':
+                campo = "Entrada en tabla sin valor"
+            if i % campos_wikipedia == 4:  # Fecha
+                dia_mes = list(map(lambda s : s.strip(),campo.split(' de ')))
+                campo = datetime.date(mes_al_anho[dia_mes[1]], mes_a_indice[dia_mes[1]], int(dia_mes[0]))
+            k = 1
+            if x.get('rowspan') != None:
+                k = int(x.get('rowspan'))
+            for j in range(k):
+                partidos[i//campos_wikipedia+j][i%campos_wikipedia] = campo
+    
     for p in partidos:
         horas, minutos = list(map(int, p[5].split(':')))
         print(",".join(list(map(str, p[:4] + [datetime.datetime(p[4].year, p[4].month, p[4].day, horas, minutos)]))))
+        
+    # TO DO: Hacer mejor con pandas.
+
+    
     # nombres_equipos = equipos = sorted(list(set([p[0] for p in partidos])))
     # for eq in nombres_equipos:
     #     dia_horario_local = {}
