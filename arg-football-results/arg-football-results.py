@@ -25,7 +25,6 @@ for anho in [2018,2019]:
     fechas = fechas_por_anho[anho]
     campos_wikipedia = 6
     rows = (equipos//2)*fechas
-    print(rows)
     partidos = [['' for x in range(campos_wikipedia)] for row in range(rows)]
     i = 0
     start = start_por_anho[anho]   # Buscar a ojo en unos minutos cuando empieza la tabla viendo el HTML de wikipedia, ayudado por bs4
@@ -36,7 +35,6 @@ for anho in [2018,2019]:
             i += 1
         if i < campos_wikipedia*rows:
             campo = x.getText().strip().split('[')[0]
-            print(campo)
             if campo == '':
                 campo = "Entrada en tabla sin valor"
             if i % campos_wikipedia == 4:  # Fecha
