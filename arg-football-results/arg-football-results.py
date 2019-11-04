@@ -1,54 +1,87 @@
+# Usa python3
 import requests,datetime
 from bs4 import BeautifulSoup
 
-equipos_por_anho = {2018:26,2019:24}
-start_por_anho = {2018:1342,2019:2005}
-finish_por_anho = {2018:-195,2019:-664}
-fechas_por_anho = {2018:25,2019:13}
-for anho in [2018,2019]:
-    print("\n\n\n#######################\n# Superliga " + str(anho) + "-" + str(anho+1) + " #\n#######################\n")
-    wiki = "https://es.wikipedia.org/wiki/Campeonato_de_Primera_División_" + str(anho) +"-" + str(anho+1)[2:] + "_(Argentina)"
-    website_url = requests.get(wiki).text
-    soup = BeautifulSoup(website_url,'lxml')
+from match import Match
 
-    mes_al_anho = {'enero':anho+1, 'febrero':anho+1, 'marzo':anho+1, 'abril':anho+1,
-                   'mayo':anho+1, 'junio':anho+1, 'julio':anho, 'agosto':anho,
-                   'septiembre':anho, 'octubre':anho, 'noviembre':anho, 'diciembre':anho}
+################################
+# Constants to adapt each time #
+################################
 
-    mes_a_indice = {'enero':1, 'febrero':2, 'marzo':3, 'abril':4,
-                   'mayo':5, 'junio':6, 'julio':7, 'agosto':8,
-                   'septiembre':9, 'octubre':10, 'noviembre':11, 'diciembre':12}
+years = [2018,2019]
+teams_each_year = {2018:26,2019:24}
+start_each_year = {2018:1342,2019:2006}
+finish_each_year = {2018:-195,2019:-135}
+rounds_each_year = {2018:25,2019:13}
+wikipedia_fields = 6
 
-    indice_datetime_a_dia = {0:'Lunes', 1:'Martes', 2:'Miércoles', 3:'Jueves', 4:'Viernes', 5:'Sábado', 6:'Domingo'}
+year_each_month = {year:{'january':year+1,'enero':year+1, 'february':year+1,'febrero':year+1, 
+						  'march':year+1,'marzo':year+1, 'april':year+1,'abril':year+1,	'may':year+1,'mayo':year+1,
+						  'june':year+1,'junio':year+1, 'july':year,'julio':year, 'august':year,'agosto':year,
+						  'september':year,'septiembre':year,'setiembre':year, 'october':year,'octubre':year, 
+						   'november':year,'noviembre':year, 'december':year,'diciembre':year} for year in years}
 
-    equipos = equipos_por_anho[anho]
-    fechas = fechas_por_anho[anho]
-    campos_wikipedia = 6
-    rows = (equipos//2)*fechas
-    partidos = [['' for x in range(campos_wikipedia)] for row in range(rows)]
+index_each_month = {year:{'january':1,'enero':1, 'february':2,'febrero':2, 'march':3,'marzo':3, 'april':4,'abril':4,
+					'may':5,'mayo':5,'june':6,'junio':6, 'july':7,'julio':7, 'august':8,'agosto':8,
+					'september':9,'septiembre':9,'setiembre':9, 'october':10,'octubre':10, 
+					'november':11,'noviembre':11, 'december':12,'diciembre':12} for year in years}
+					
+index_datetime_day = {0:'monday', 1:'tuesday', 2:'wednesday', 3:'thursday', 4:'friday', 5:'saturday', 6:'sunday'}
+
+def get_matches_from_wikipedia(soup,teams,rounds,rows,year):
+
+    matches_raw = [['' for x in range(wikipedia_fields)] for row in range(rows)]
     i = 0
-    start = start_por_anho[anho]   # Buscar a ojo en unos minutos cuando empieza la tabla viendo el HTML de wikipedia, ayudado por bs4
-    finish = finish_por_anho[anho] # Buscar a ojo en unos minutos cuando termina la tabla viendo el HTML de wikipedia, ayudado por bs4
+    start = start_each_year[year]   # Search on the table watching HTML from wikipedia, aided by bs4
+    finish = finish_each_year[year] # Search on the table watching HTML from wikipedia, aided by bs4
     
     for x in soup.select('table tbody tr td')[start:finish]:
-        while(i < campos_wikipedia*rows and partidos[i//campos_wikipedia][i%campos_wikipedia] != ''):
+        while(i < wikipedia_fields*rows and matches_raw[i//wikipedia_fields][i%wikipedia_fields] != ''):
             i += 1
-        if i < campos_wikipedia*rows:
-            campo = x.getText().strip().split('[')[0]
-            if campo == '':
-                campo = "Entrada en tabla sin valor"
-            if i % campos_wikipedia == 4:  # Fecha
-                dia_mes = list(map(lambda s : s.strip(),campo.split(' de ')))
-                campo = datetime.date(mes_al_anho[dia_mes[1]], mes_a_indice[dia_mes[1]], int(dia_mes[0]))
+        if i < wikipedia_fields*rows:
+            field = x.getText().strip().split('[')[0]
+            if field == '':
+                field = "Entry without value"
+            if i % wikipedia_fields == 4:  # Date
+                day_month = list(map(lambda s : s.strip().lower(),field.split(' de ')))
+                field = datetime.date(year_each_month[year][day_month[1]], index_each_month[year][day_month[1]], int(day_month[0]))
             k = 1
             if x.get('rowspan') != None:
                 k = int(x.get('rowspan'))
             for j in range(k):
-                partidos[i//campos_wikipedia+j][i%campos_wikipedia] = campo
+                matches_raw[i//wikipedia_fields+j][i%wikipedia_fields] = field
     
-    for p in partidos:
-        horas, minutos = list(map(int, p[5].split(':')))
-        print(",".join(list(map(str, p[:4] + [datetime.datetime(p[4].year, p[4].month, p[4].day, horas, minutos)]))))
+    match_list = []
+    for match in matches_raw:
+        hours, minutes = list(map(int, match[5].split(':')))
+        home_goals,away_goals = match[1].split('-')
+        home,away = match[0],match[2]
+        stadium = match[3]
+        date = datetime.datetime(match[4].year, match[4].month, match[4].day, hours, minutes)
+        match_list.append(Match(date,stadium,home,away,home_goals,away_goals))
+    
+    return match_list
+       
+def main():
+
+	for year in years:
+		print("\n\n\n#######################\n# Superliga " + str(year) + "-" + str(year+1) + " #\n#######################\n")
+		wiki = "https://es.wikipedia.org/wiki/Campeonato_de_Primera_División_" + str(year) +"-" + str(year+1)[2:] + "_(Argentina)"
+		website_url = requests.get(wiki).text
+		soup = BeautifulSoup(website_url,'lxml')
+
+		teams = teams_each_year[year]
+		rounds = rounds_each_year[year]
+		rows = (teams//2)*rounds
+		
+		match_list = sorted(get_matches_from_wikipedia(soup,teams,rounds,rows,year))
+		for m in match_list:
+			print(m)
+			
+
+if __name__ == '__main__':
+	main()
+    
         
     # TO DO: Hacer mejor con pandas.
 
