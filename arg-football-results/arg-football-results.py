@@ -33,6 +33,15 @@ index_month = {year:{'january':1,'enero':1, 'february':2,'febrero':2, 'march':3,
 					'november':11,'noviembre':11, 'december':12,'diciembre':12} for year in years}
 					
 index_datetime_day = {0:'monday', 1:'tuesday', 2:'wednesday', 3:'thursday', 4:'friday', 5:'saturday', 6:'sunday'}
+index_datetime_spanish_day = {0:'lunes', 1:'martes', 2:'miercoles', 3:'jueves', 4:'viernes', 5:'sabado', 6:'domingo'}
+
+colors = {	'black' :'FF000000','white' : 'FFFFFFFF', 
+			'light_red' : 'FFFF4D4D', 'dark_red' : 'FFB30000', 'red' : 'FFFF3333',
+			'light_blue' : 'FF4D94FF', 'dark_blue' : 'FF0066CC', 'blue' : 'FF3385FF', 
+			'light_green' : 'FF66FF33', 'dark_green' : 'FF009900', 'green' : 'FF47D147',
+			'light_orange' : 'FFFFA366', 'dark_orange' : 'FFCC5200', 'orange' : 'FFFF8533',
+			'light_yellow' : 'FFFFFF66', 'dark_yellow' : 'FF666600', 'yellow' : 'FFB3B300',
+			'light_violet' : 'FFB380FF', 'dark_violet' : 'FF884DFF', 'violet' : 'FFAA80FF'}
 
 def get_data_from_year(year):
 	wiki = "https://es.wikipedia.org/wiki/Campeonato_de_Primera_División_" + str(year) +"-" + str(year+1)[2:] + "_(Argentina)"
@@ -51,6 +60,7 @@ def get_matches_from_wikipedia(soup,teams,rounds,rows,year):
     start = start_year[year]   # Search on the table watching HTML from wikipedia, aided by bs4
     finish = finish_year[year] # Search on the table watching HTML from wikipedia, aided by bs4
     
+		
     for x in soup.select('table tbody tr td')[start:finish]:
         while(i < wikipedia_fields*rows and matches_raw[i//wikipedia_fields][i%wikipedia_fields] != ''):
             i += 1
@@ -78,6 +88,32 @@ def get_matches_from_wikipedia(soup,teams,rounds,rows,year):
         match_list.append(Match(date,round_slot,stadium,home,away,home_goals,away_goals,False))
     
     return match_list
+
+def print_value(sheet, r, c, value, is_date, is_time, top_border, background_color, text_color, is_bold):
+	sheet.cell(row = r, column = c).value = value
+	if is_date:
+		sheet.cell(row = r, column = c).number_format = 'dd/mm/yyyy'
+	if is_time:
+		sheet.cell(row = r, column = c).number_format = 'hh:mm'
+	
+	sheet.cell(row = r, column = c).fill = PatternFill(start_color=colors[background_color],end_color=colors[background_color],fill_type='solid')
+	sheet.cell(row = r, column = c).font = Font(name='Calibri',size=11,bold=is_bold, color = colors[text_color])	
+	sheet.cell(row = r, column = c).alignment = Alignment(horizontal='center',vertical='center')
+	if top_border:
+		sheet.cell(row = r, column = c).border = Border(left=Side(border_style='thin', color=colors['black']),right=Side(border_style='thin',color=colors['black']),top=Side(border_style='thick',color=colors['black']),bottom=Side(border_style='thin',color=colors['black']))
+	else:
+		sheet.cell(row = r, column = c).border = Border(left=Side(border_style='thin', color=colors['black']),right=Side(border_style='thin',color=colors['black']),top=Side(border_style='thin',color=colors['black']),bottom=Side(border_style='thin',color=colors['black']))
+		
+
+def format_sheet(sheet):
+	sheet.freeze_panes = 'A2'
+	for c in 'EFGHIJKLMNOPQRSTUVWXYZ':
+		sheet.column_dimensions[c].width = 25
+	for c in 'BCD':
+		sheet.column_dimensions[c].width = 15
+	for c in 'A':
+		sheet.column_dimensions[c].width = 10
+	
     
 def generate_data_sheet(file_name,match_list):
 	wb = openpyxl.Workbook()
@@ -85,11 +121,35 @@ def generate_data_sheet(file_name,match_list):
 	sheet = wb.get_active_sheet()
 	sheet.title = 'Horarios Superliga'
 
-	sheet_columns = ["Fecha","Dia Calendario","Dia Semana","Horario","Local","Visitante"]
-	sheet.freeze_panes = 'A2'
+	sheet_columns = ["Fecha","Calendario","Dia Semana","Horario","Local","Visitante"]
+	color_columns = [["light_yellow","light_blue","light_red","light_green","light_violet","light_orange"],
+					 ["yellow","blue","red","green","violet","orange"],
+					 ["dark_yellow","dark_blue","dark_red","dark_green","dark_violet","dark_orange"]]
+	format_sheet(sheet)
 	
-	
-	
+	r = 1
+	for c in range(len(sheet_columns)):
+		print_value(sheet,r,c+1,sheet_columns[c],False,False,True,color_columns[2][c],'white',True)
+
+	last_round = 0
+	last_day = -1
+	ROWS_BETWEEN_ROUNDS = 10
+	for match in match_list:
+		
+		if match.round_slot != last_round:
+			last_round = match.round_slot
+			last_day = match.date.weekday()
+			r += ROWS_BETWEEN_ROUNDS
+
+		row_values = [match.round_slot,match.date, match.date, index_datetime_spanish_day[match.date.weekday()].upper(),match.home.upper(),match.away.upper()]
+		top_border = match.date.weekday() != last_day
+		last_day = match.date.weekday()
+		
+		for c in range(len(row_values)):
+			background_color = color_columns[match.round_slot%2][c]
+			print_value(sheet,r,c+1,row_values[c], c == 1, c == 2, top_border, background_color, 'black',False)
+		r += 1
+		
 	wb.save(file_name)
        
 def main():
