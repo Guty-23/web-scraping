@@ -48,6 +48,7 @@ def add_letter_and_title(page, problem_letter, problem_title):
 	page.mergePage(overlayWHITE)
 	page.mergePage(new_pdf.getPage(0))
 
+
 def download_from_url(contest_id, problem_index):
 	file_name = contest_id + '-' + problem_index + '.pdf'
 	problem_url = 'https://codeforces.com/problemset/problem/' + contest_id + '/' + problem_index
@@ -56,15 +57,12 @@ def download_from_url(contest_id, problem_index):
 	
 	
 def crop_pdf(file_name, letter, title):
-	with open(file_name, "rb") as input_pdf:
-		input_pdf = PdfFileReader(input_pdf)
+	with open(file_name, "rb") as input_pdf_problem:
+		input_pdf = PdfFileReader(input_pdf_problem)
 		output_pdf = PdfFileWriter()
 		default_box_page = {0:{'trimLowerLeft':(0,0),'trimUpperRight':(400,685), 'cropLowerLeft':(0,0), 'cropUpperRight':(400,685)}, 
 							1:{'trimLowerLeft':(0,0),'trimUpperRight':(400,842), 'cropLowerLeft':(0,0), 'cropUpperRight':(400,842)}} 
-		
-		
-		numPages = input_pdf.getNumPages()
-		for i in range(numPages):
+		for i in range(input_pdf.getNumPages()):
 			page = input_pdf.getPage(i)
 			print("pagina",i+1,":","Ancho x Alto  =", page.mediaBox.getUpperRight_x(),"x", page.mediaBox.getUpperRight_y())
 			page.trimBox.lowerLeft = default_box_page[int(i > 0)]['trimLowerLeft']
@@ -90,11 +88,22 @@ def main():
 			crop_pdf(file_name,letter,title.replace('_',' '))
 			letters.append(letter)
 	
-	
-	final_output = PdfFileMerger()
+	pdf_merger = PdfFileMerger()
 	for letter in sorted(letters):
-		merger.append(PdfFileReader(file(letter + '.pdf', 'rb')))
-	final_output.write(contest + '.pdf')
+		pdf_merger.append(os.getcwd() + '/' + letter + '.pdf')
+	with open(contest + '.pdf', 'wb') as output_file:
+		pdf_merger.write(output_file)
+
+	
+	# ~ final_output = PdfFileWriter()
+	# ~ for letter in sorted(letters):
+		# ~ with open(letter + '.pdf','a') as input_problem:
+			# ~ input_pdf = PdfFileReader(input_problem)
+			# ~ for i in range(input_pdf.getNumPages()):
+				# ~ final_output.addPage(input_pdf.getPage(i))
+				
+	# ~ with open(contest + '.pdf', "wb") as output_file:
+		# ~ final_output.write(output_file)
 		
 			
 if __name__ == '__main__':
