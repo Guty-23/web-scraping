@@ -158,11 +158,6 @@ def main():
 		match_list = sorted(get_matches_from_wikipedia(soup,teams,rounds,rows,year))
 		generate_data_sheet(file_name,match_list)
 		
-			
-		
-		
-		
-			
 
 if __name__ == '__main__':
 	main()
