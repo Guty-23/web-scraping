@@ -7,7 +7,7 @@ from reportlab.lib.pagesizes import letter
 # To use the script fill a line in "contest.txt" for each problem that you want. # 
 # Each line should have four values (separated by a space):						 #
 # 					 															 #	
-# CONTEST_ID PROBLEM_ID LETTER_YOUR_PROBLEM_SET PROBLEM_TITLE                    #
+# CONTEST_ID PROBLEM_ID LETTER_YOUR_PROBLEM_SET PROBLEM_TITLE (Optional:GYM)     #
 #																				 #
 # NOTE: If there are spaces in the title, use underscore ("_") in "contest.txt", #
 # blank spaces will be used in the .pdf.										 #
@@ -49,10 +49,13 @@ def add_letter_and_title(page, problem_letter, problem_title):
 	page.mergePage(new_pdf.getPage(0))
 
 
-def download_from_url(contest_id, problem_index):
+def download_from_url(contest_id, problem_index, gym):
 	file_name = contest_id + '-' + problem_index + '.pdf'
 	problem_url = 'https://codeforces.com/problemset/problem/' + contest_id + '/' + problem_index
-	pdfkit.from_url(problem_url, file_name)
+	if gym:
+		problem_url = 'https://codeforces.com/gym/' + contest_id + '/problem/' + problem_index 
+	print(problem_url)
+	pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000})
 	return file_name
 	
 	
@@ -83,8 +86,13 @@ def main():
 	contest = input('Ingrese el nombre del contest y no olvide completar "contest.txt" como se indica:\n\n')
 	with open('contest.txt','r') as input_file:
 		for line in input_file:
-			contest_id,problem_index,letter,title = line.split()
-			file_name = download_from_url(contest_id,problem_index)
+			input_line = line.split()
+			gym = 'NO_GYM'
+			if input_line[-1].upper() == 'GYM':
+				contest_id,problem_index,letter,title,gym = input_line
+			else:
+				contest_id,problem_index,letter,title = input_line
+			file_name = download_from_url(contest_id,problem_index, gym.upper() == 'GYM')
 			crop_pdf(file_name,letter,title.replace('_',' '))
 			letters.append(letter)
 	
@@ -93,18 +101,6 @@ def main():
 		pdf_merger.append(os.getcwd() + '/' + letter + '.pdf')
 	with open(contest + '.pdf', 'wb') as output_file:
 		pdf_merger.write(output_file)
-
-	
-	# ~ final_output = PdfFileWriter()
-	# ~ for letter in sorted(letters):
-		# ~ with open(letter + '.pdf','a') as input_problem:
-			# ~ input_pdf = PdfFileReader(input_problem)
-			# ~ for i in range(input_pdf.getNumPages()):
-				# ~ final_output.addPage(input_pdf.getPage(i))
-				
-	# ~ with open(contest + '.pdf', "wb") as output_file:
-		# ~ final_output.write(output_file)
-		
 			
 if __name__ == '__main__':
 	main()
