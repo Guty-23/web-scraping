@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import letter
 # CONTEST_ID PROBLEM_ID LETTER_YOUR_PROBLEM_SET PROBLEM_TITLE (Optional:GYM)     #
 #																				 #
 # NOTE: If there are spaces in the title, use underscore ("_") in "contest.txt", #
-# blank spaces will be used in the .pdf.										 #
+# blank spaces will be used in the .pdf. Also, there should be no extra lines.	 #
 #																			     #
 #																				 #
 # TO DO:															             #
@@ -28,8 +28,8 @@ def add_letter_and_title(page, problem_letter, problem_title):
 	packet = io.BytesIO()
 	
 	can = canvas.Canvas(packet, pagesize=letter)
-	can.setFont('Helvetica-Bold', 20)
-	can.drawString(150 - len(problem_title), 660, problem_title)
+	can.setFont('Helvetica-Bold', 20 if len(problem_title) < 17 else 17)
+	can.drawString(200 - int( (4.1 if len(problem_title) < 17 else 3.4) *len(problem_title)), 705, problem_title)
 	can.showPage()
 	can.save()
 	packet.seek(0)
@@ -37,8 +37,8 @@ def add_letter_and_title(page, problem_letter, problem_title):
 
 	imgPath = os.getcwd() + '/letters/' + problem_letter + '.png'
 	imgPathWHITE = os.getcwd() + '/letters/' + 'BLANCO_LARGO.png'
-	imgDoc.drawImage(imgPath, 10, 600, 96, 96)    ## at (10,600) with size 96x96 (lower left is the origin )
-	imgDocWHITE.drawImage(imgPathWHITE, 125, 660, 300, 300)   
+	imgDoc.drawImage(imgPath, 10, 645, 96, 96)    ## at (10,600) with size 96x96 (lower left is the origin )
+	imgDocWHITE.drawImage(imgPathWHITE, 125, 700, 300, 300)   
 	imgDoc.save()
 	imgDocWHITE.save()
 
@@ -55,7 +55,8 @@ def download_from_url(contest_id, problem_index, gym):
 	if gym:
 		problem_url = 'https://codeforces.com/gym/' + contest_id + '/problem/' + problem_index 
 	print(problem_url)
-	pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000})
+	if not os.path.isfile(file_name):
+		pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000})
 	return file_name
 	
 	
@@ -63,8 +64,8 @@ def crop_pdf(file_name, letter, title):
 	with open(file_name, "rb") as input_pdf_problem:
 		input_pdf = PdfFileReader(input_pdf_problem)
 		output_pdf = PdfFileWriter()
-		default_box_page = {0:{'trimLowerLeft':(0,0),'trimUpperRight':(400,685), 'cropLowerLeft':(0,0), 'cropUpperRight':(400,685)}, 
-							1:{'trimLowerLeft':(0,0),'trimUpperRight':(400,842), 'cropLowerLeft':(0,0), 'cropUpperRight':(400,842)}} 
+		default_box_page = {0:{'trimLowerLeft':(0,0),'trimUpperRight':(410,730), 'cropLowerLeft':(0,0), 'cropUpperRight':(410,730)}, 
+							1:{'trimLowerLeft':(0,0),'trimUpperRight':(410,842), 'cropLowerLeft':(0,0), 'cropUpperRight':(410,842)}} 
 		for i in range(input_pdf.getNumPages()):
 			page = input_pdf.getPage(i)
 			print("pagina",i+1,":","Ancho x Alto  =", page.mediaBox.getUpperRight_x(),"x", page.mediaBox.getUpperRight_y())
