@@ -16,7 +16,13 @@ from reportlab.lib.pagesizes import letter
 # TO DO:															             #
 #	- Center title																 #	
 #	- Erase auxiliary files generated											 #
-#	- Avoid hardcoding constants		 										 #
+#	- Avoid hardcoding constants												 #	
+#																				 #
+#  Requirements:																 #		
+#    - pip3 install pdfkit                                                       #    
+#    - pip3 install wkhtmltopdf													 #
+#    - pip3 install 'PyPDF2<3.0'												 #
+#	  	 										 								 #
 ##################################################################################
 
 
@@ -56,7 +62,7 @@ def download_from_url(contest_id, problem_index, gym):
 		problem_url = 'https://codeforces.com/gym/' + contest_id + '/problem/' + problem_index 
 	print(problem_url)
 	if not os.path.isfile(file_name):
-		pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000})
+		pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000, "enable-local-file-access": ""})
 	return file_name
 	
 	
@@ -106,3 +112,4 @@ def main():
 if __name__ == '__main__':
 	main()
  
+
