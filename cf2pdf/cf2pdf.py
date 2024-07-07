@@ -1,4 +1,5 @@
-import sys, pdfkit, os, io
+import sys, os, io
+from pyhtml2pdf import converter
 from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -34,8 +35,8 @@ def add_letter_and_title(page, problem_letter, problem_title):
 	packet = io.BytesIO()
 	
 	can = canvas.Canvas(packet, pagesize=letter)
-	can.setFont('Helvetica-Bold', 20 if len(problem_title) < 17 else 17)
-	can.drawString(200 - int( (4.1 if len(problem_title) < 17 else 3.4) *len(problem_title)), 705, problem_title)
+	can.setFont('Helvetica-Bold', 20 if len(problem_title) < 17 else 14)
+	can.drawString(200 - int( (4.1 if len(problem_title) < 17 else 2.4) *len(problem_title)), 705, problem_title)
 	can.showPage()
 	can.save()
 	packet.seek(0)
@@ -62,7 +63,7 @@ def download_from_url(contest_id, problem_index, gym):
 		problem_url = 'https://codeforces.com/gym/' + contest_id + '/problem/' + problem_index 
 	print(problem_url)
 	if not os.path.isfile(file_name):
-		pdfkit.from_url(problem_url, file_name, options={'javascript-delay': 10000, "enable-local-file-access": ""})
+		converter.convert(problem_url, file_name, timeout=5)
 	return file_name
 	
 	
@@ -70,8 +71,8 @@ def crop_pdf(file_name, letter, title):
 	with open(file_name, "rb") as input_pdf_problem:
 		input_pdf = PdfFileReader(input_pdf_problem)
 		output_pdf = PdfFileWriter()
-		default_box_page = {0:{'trimLowerLeft':(0,0),'trimUpperRight':(410,730), 'cropLowerLeft':(0,0), 'cropUpperRight':(410,730)}, 
-							1:{'trimLowerLeft':(0,0),'trimUpperRight':(410,842), 'cropLowerLeft':(0,0), 'cropUpperRight':(410,842)}} 
+		default_box_page = {0:{'trimLowerLeft':(0,0),'trimUpperRight':(406,730), 'cropLowerLeft':(0,0), 'cropUpperRight':(406,730)}, 
+							1:{'trimLowerLeft':(0,0),'trimUpperRight':(406,842), 'cropLowerLeft':(0,0), 'cropUpperRight':(406,842)}} 
 		for i in range(input_pdf.getNumPages()):
 			page = input_pdf.getPage(i)
 			print("pagina",i+1,":","Ancho x Alto  =", page.mediaBox.getUpperRight_x(),"x", page.mediaBox.getUpperRight_y())
