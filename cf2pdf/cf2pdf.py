@@ -20,7 +20,7 @@ from reportlab.lib.pagesizes import letter
 #	- Avoid hardcoding constants												 #	
 #																				 #
 #  Requirements:																 #		
-#    - pip3 install pdfkit                                                       #    
+#    - pip3 install pyhtml2pdf                                                       #    
 #    - pip3 install wkhtmltopdf													 #
 #    - pip3 install 'PyPDF2<3.0'												 #
 #	  	 										 								 #
