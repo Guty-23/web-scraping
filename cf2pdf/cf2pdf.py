@@ -43,16 +43,17 @@ def add_letter_and_title(page, problem_letter, problem_title):
 	new_pdf = PdfFileReader(packet)
 
 	imgPath = os.getcwd() + '/letters/' + problem_letter + '.png'
-	imgPathWHITE = os.getcwd() + '/letters/' + 'BLANCO_LARGO.png'
+	imgPathWHITE = os.getcwd() + '/letters/' + 'BLANCO_LARGO_2.png'
 	imgDoc.drawImage(imgPath, 10, 645, 96, 96)    ## at (10,600) with size 96x96 (lower left is the origin )
-	imgDocWHITE.drawImage(imgPathWHITE, 125, 700, 300, 300)   
+	imgDocWHITE.drawImage(imgPathWHITE, 106, 635, 300, 300)   
 	imgDoc.save()
 	imgDocWHITE.save()
 
 	overlay = PdfFileReader(io.BytesIO(imgTemp.getvalue())).getPage(0)
 	overlayWHITE = PdfFileReader(io.BytesIO(imgTempWHITE.getvalue())).getPage(0)
-	page.mergePage(overlay)
 	page.mergePage(overlayWHITE)
+	page.mergePage(overlay)
+	
 	page.mergePage(new_pdf.getPage(0))
 
 
