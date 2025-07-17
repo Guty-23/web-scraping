@@ -1,4 +1,4 @@
-1 A B Theatre_Square
-4 A A Watermelon
-71 A C Way_Too_Long_Words
-102482 A D Catch_the_Plane GYM
+Contest_Sample
+2120 A C Square_of_Rectangles
+105699 I A Interactive_Casino GYM
+1329 A B Dreamoon_Likes_Coloring 
