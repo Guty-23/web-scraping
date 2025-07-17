@@ -1,4 +1,4 @@
-Contest_Sample
+Contest Sample
 2120 A C Square_of_Rectangles
 105699 I A Interactive_Casino GYM
 1329 A B Dreamoon_Likes_Coloring 

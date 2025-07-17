@@ -26,6 +26,7 @@ try:
     from PIL import Image
 except ImportError:
     raise ImportError("Pillow is required. Install with 'pip install pillow'.")
+from reportlab.lib.utils import ImageReader
 
 # =====================
 # Configuration
@@ -361,6 +362,30 @@ def crop_pdf(file_name: str, letter: str, title: str) -> None:
     # Post-process: add white block on last page
     add_white_block_on_last_page(f'{letter}.pdf')
 
+def create_cover_page(contest_name: str, sponsors_path: str = os.path.join(os.getcwd(), 'letters', 'sponsors.png'), output_path: str = 'cover.pdf'):
+    """Create a cover page PDF with the contest name and an enlarged sponsors image."""
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.units import inch
+    c = canvas.Canvas(output_path, pagesize=letter)
+    width, height = letter
+    # Title: Contest name, centered, large font
+    c.setFont('Helvetica-Bold', 32)
+    title_y = height - 2 * inch
+    c.drawCentredString(width / 2, title_y, contest_name)
+    # Sponsors image: below the title, enlarged to fit width minus margins
+    img = ImageReader(sponsors_path)
+    img_width, img_height = img.getSize()
+    max_img_width = width - 2 * inch
+    scale = max_img_width / img_width
+    scaled_width = img_width * scale
+    scaled_height = img_height * scale
+    img_x = (width - scaled_width) / 2
+    img_y = title_y - scaled_height - inch / 2
+    c.drawImage(sponsors_path, img_x, img_y, width=scaled_width, height=scaled_height, preserveAspectRatio=True, mask='auto')
+    c.showPage()
+    c.save()
+
 def main() -> None:
     """Main entry point: parse contest file, process problems, and merge PDFs."""
     try:
@@ -370,7 +395,13 @@ def main() -> None:
             letter = process_problem(problem)
             if letter:
                 letters.append(letter)
-        pdf_merger = create_pdf_merger(letters)
+        # Create cover page
+        create_cover_page(contest)
+        # Merge cover page and problem PDFs
+        pdf_merger = PdfFileMerger()
+        pdf_merger.append('cover.pdf')
+        for letter in sorted(letters):
+            pdf_merger.append(os.path.join(os.getcwd(), f'{letter}.pdf'))
         with open(f'{contest}.pdf', 'wb') as output_file:
             pdf_merger.write(output_file)
     except Exception as e:
